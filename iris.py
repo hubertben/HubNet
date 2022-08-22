@@ -1,5 +1,6 @@
 
 from hubnet import *
+from networkManager import *
 import random
 
 
@@ -73,8 +74,18 @@ class Dataset:
 
 d = Dataset('Iris.csv', .8)
 
-n = Network(4, [5, 5, 3])
 
-n.train(d.X, d.Y, stopLoss=50, _print = True)
 
-n.graph(granularity=30, grab=2) # grab = 3 does not work
+NM = NetworkManager(filepath = 'iris_params.csv')
+params = NM._readCSV()
+
+n = Network(4, [5, 5, 3], params)
+
+# n.train(d.X, d.Y, stopLoss=10, _print = False)
+
+# n.graph(granularity=30, grab=2) # grab = 3 does not work
+
+n.graph(granularity=50, grab=2)
+
+
+# print(n._parameters())

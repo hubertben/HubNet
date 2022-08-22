@@ -303,7 +303,7 @@ class Network:
                 if(_print == True):
                     print('Loss: %s' % loss.value)
                 elif(_print == False):
-                    l = math.floor(100 - map(loss.value, stopLoss, topLoss.value, 0, 100))
+                    l = round(100 - (map(loss.value, stopLoss, topLoss.value, 0, 100)), 2)
                     if(lastP != l):
                         print('Loss Percent: %s' % l)
                         lastP = l
