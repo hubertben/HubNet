@@ -75,6 +75,75 @@ d = Dataset('Iris.csv', .8)
 
 n = Network(4, [5, 5, 3])
 
-n.train(d.X, d.Y, stopLoss=5, _print = True)
+n.train(d.X, d.Y, stopLoss=50, _print = True)
 
-n._viewLoss()
+n.graph(granularity=30, grab=2) # grab = 3 does not work
+
+# def map(x, in_min, in_max, out_min, out_max):
+#     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+
+# granularity = 15
+# def generatePoints(cur = [], n = 0):
+
+#     if(n == 0):
+#         return cur
+
+#     points = []
+
+#     for i in range(granularity):
+#         g = generatePoints(cur + [i], n - 1)
+#         points.extend(g)
+
+#     return points
+
+# grab = 3
+# poi = generatePoints([], grab)
+# print(len(poi))
+
+# points = []
+
+# for p in range(0, len(poi), grab):
+    
+#     l = []
+#     for i in range(grab):
+#         l.append(map(poi[p + i], 0, granularity, -1, 1))
+
+#     points.append(l)
+    
+        
+# print(points)
+
+# for p in points:
+
+#     color = self(p)
+
+#     typ = True
+    
+#     if(type(color) == list):
+#         maxIndex = color.index(max(color))
+#         color = colors[maxIndex]
+#         typ = False
+#         drawPoint(x, y, color)
+
+#     else:
+
+#         color = color.value
+#         b = map(color, -1, 1, 0, 1)   
+
+#         def RGBtoHEX(r, g, b):
+#             r = int(map(r, 0, 1, 0, 255))
+#             g = int(map(g, 0, 1, 0, 255))
+#             b = int(map(b, 0, 1, 0, 255))
+#             return '#%02x%02x%02x' % (r, g, b)
+
+#         minB = min(points, key=lambda x: x[2])[2]
+#         maxB = max(points, key=lambda x: x[2])[2]
+
+#         for x, y, b in points:
+#             b = map(b, minB, maxB, 0, 1)
+#             color = RGBtoHEX(0, b, b)
+#             drawPoint(x, y, color)       
+
+
+
+             

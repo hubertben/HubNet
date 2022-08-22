@@ -87,6 +87,26 @@ class Tensor:
     def __rpow__(self, other):
         return self.__pow__(other)
 
+    def __rtruediv__(self, other):
+        return other * self**-1
+
+    def __rpow__(self, other):
+        return other ** self
+
+    def __gt__(self, other):
+        return self.value > other.value
+
+    def __lt__(self, other):
+        return self.value < other.value
+
+    def __le__(self, other):
+        return self.value <= other.value
+
+    def __ge__(self, other):
+        return self.value >= other.value
+
+
+
     def _relu(self):
         newTensor = Tensor(0 if self.value < 0 else self.value, [self], 'relu')
         
@@ -297,7 +317,7 @@ class Network:
         plt.show()
 
             
-    def graph(self, granularity=100):
+    def graph(self, granularity=15, grab = 2):
 
         kint = Tk()
         kint.title('Network Graph')
@@ -310,48 +330,115 @@ class Network:
         canvas = Canvas(kint, width=geo, height=geo)
         canvas.pack()
 
-        radius = geo / granularity
+        block_size = (geo / granularity)
+        print('Block Size: %d' % block_size)
 
-        def drawPoint(x, y, color):
-            canvas.create_rectangle(x * radius, y * radius, (x + 1) * radius, (y + 1) * radius, fill=color, outline=color)
+        def drawPoint(x, y, r, color):
+            # print(x, y, r, color)
+            
+            canvas.create_rectangle(
+                (x * block_size) + (r / 2), 
+                (y * block_size) + (r / 2),
+                ((x + 1) * block_size) - (r / 2), 
+                ((y + 1) * block_size) - (r / 2), 
+                fill=color, 
+                outline=color
+            )
 
-        print("Generating graph...")
+            # print('\n')
+            # print((x * block_size) + (r / 2))
+            # print((y * block_size) + (r / 2))
+            # print(((x + 1) * block_size) - (r / 2))
+            # print(((y + 1) * block_size) - (r / 2))
+
+
+        print("Generating graph... Block Size: %d" % block_size)
+
+        
+
+
+        
+        def generatePoints(cur = [], n = 0):
+
+            if(n == 0):
+                return cur
+
+            points = []
+
+            for i in range(granularity):
+                g = generatePoints(cur + [i], n - 1)
+                points.extend(g)
+
+            return points
+
+        
+        poi = generatePoints([], grab)
+
+        print("Generated Points")
 
         points = []
+        points2 = []
 
-        for i in range(granularity):
-            for j in range(granularity):
-                x = map(i, 0, granularity, -1, 1)
-                y = map(j, 0, granularity, -1, 1)
-                inp = [1] * self.totalNetwork[0]
-                inp[0] = x
-                inp[1] = y
-                color = self(inp)
+        for p in range(0, len(poi), grab):
+            
+            l = []
+            l2 = []
+            for i in range(grab):
+                l.append(map(poi[p + i], 0, granularity, -1, 1))
+                l2.append(poi[p + i])
 
-                if(type(color) == list):
-                    maxIndex = color.index(max(color))
-                    color = colors[maxIndex]
-                else:
-                    color = color.value
-                    b = map(color, -1, 1, 0, 1)           
-                  
-                points.append((i, j, b))
+            points.append(l)
+            points2.append(l2)
+            
+        
+        length = len(points)
+        counter = 0
 
-        def RGBtoHEX(r, g, b):
-            r = int(map(r, 0, 1, 0, 255))
-            g = int(map(g, 0, 1, 0, 255))
-            b = int(map(b, 0, 1, 0, 255))
-            return '#%02x%02x%02x' % (r, g, b)
+        for p, og_p in zip(points, points2):
 
-        minB = min(points, key=lambda x: x[2])[2]
-        maxB = max(points, key=lambda x: x[2])[2]
+            if(counter % 100 == 0):
+                print('%d %%' % (counter / length * 100))
+            counter += 1
 
-        print(minB, maxB)
+            p_extend = [0] * (self.totalNetwork[0] - len(p))
+            p.extend(p_extend)
+            
+            color = self(p)
 
-        for x, y, b in points:
-            b = map(b, minB, maxB, 0, 1)
-            color = RGBtoHEX(0, b, b)
-            drawPoint(x, y, color)
+            x = 0
+            y = 0
+            r = 0
+
+            if(grab == 2):
+                x = og_p[0]
+                y = og_p[1]
+
+            elif(grab >= 3):
+                x = og_p[0]
+                y = og_p[1]
+                r = block_size - (map(p[2], -1, 1, 0, block_size))
+                print("Radius: %d" % r)
+
+            if(type(color) == list):
+
+                maxIndex = color.index(max(color))
+                color = colors[maxIndex]
+                drawPoint(x, y, r, color)
+
+            else:
+
+                color = color.value  
+
+                def RGBtoHEX(r, g, b):
+                    r = int(map(r, 0, 1, 0, 255))
+                    g = int(map(g, 0, 1, 0, 255))
+                    b = int(map(b, 0, 1, 0, 255))
+                    return '#%02x%02x%02x' % (r, g, b)
+
+                b = map(b, -1, 1, 0, 1)
+                color = RGBtoHEX(0, b, b)
+                drawPoint(x, y, r, color)
+                    
 
 
         kint.mainloop()
