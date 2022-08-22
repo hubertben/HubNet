@@ -211,13 +211,18 @@ class Layer:
         
 class Network:
 
-    def __init__(self, networkInputs, networkLayerSizes):
+    def __init__(self, networkInputs, networkLayerSizes, parameters=None):
         self.totalNetwork = [networkInputs] + networkLayerSizes
         self.layers = []
         for layer in range(len(networkLayerSizes)):
             self.layers.append(Layer(self.totalNetwork[layer], self.totalNetwork[layer + 1]))
 
         self.lossLog = []
+
+        if(type(parameters) == list):
+            self.setParameters(parameters)
+        elif(type(parameters) == Network):
+            self.copyParameters(parameters)
 
     def __call__(self, inputs):
         output = 0
@@ -228,6 +233,17 @@ class Network:
 
     def _parameters(self):
         return [parameter for layer in self.layers for parameter in layer._parameters()]
+
+    def setParameters(self, parameters):
+        for i, layer in enumerate(self.layers):
+            for j, neuron in enumerate(layer.neurons):
+                neuron.weights = parameters[:len(neuron.weights)]
+                parameters = parameters[len(neuron.weights):]
+                neuron.bias = parameters[0]
+                parameters = parameters[1:]
+
+    def copyParameters(self, other):
+        self.setParameters(other._parameters())
 
     def _zeroGradients(self):
         for p in self._parameters():
