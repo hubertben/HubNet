@@ -130,8 +130,6 @@ class Tensor:
     def __round__(self, n):
         return round(self.value, n)
 
-
-
 class Neuron:
 
     def __init__(self, inputCount):
@@ -191,8 +189,6 @@ class Layer:
             print(' -- Neuron %d:' % i)
             neuron._printParameters()
         
-
-
 class Network:
 
     def __init__(self, networkInputs, networkLayerSizes):
@@ -287,9 +283,7 @@ class Network:
 
                 if loss.value < stopLoss:
                     break
-
-# 
-
+                    
         return loss.value
 
             
@@ -303,7 +297,6 @@ class Network:
         plt.show()
 
             
-
     def graph(self, granularity=100):
 
         kint = Tk()
@@ -341,9 +334,7 @@ class Network:
                 else:
                     color = color.value
                     b = map(color, -1, 1, 0, 1)           
-                    
-                    
-                
+                  
                 points.append((i, j, b))
 
         def RGBtoHEX(r, g, b):
