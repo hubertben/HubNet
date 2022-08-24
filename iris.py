@@ -5,7 +5,7 @@ from networkManager import *
 NM = NetworkManager(filepath = 'iris_params.csv')
 params = NM._readCSV()
 
-n = Network(4, [5, 5, 3], params)
+n = Network([4, 5, 5, 3], params)
 
 # n.train(d.X, d.Y, stopLoss=10, _print = False)
 

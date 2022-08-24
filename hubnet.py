@@ -212,10 +212,10 @@ class Layer:
         
 class Network:
 
-    def __init__(self, networkInputs, networkLayerSizes, parameters=None):
-        self.totalNetwork = [networkInputs] + networkLayerSizes
+    def __init__(self, networkLayerSizes, parameters=None):
+        self.totalNetwork = networkLayerSizes
         self.layers = []
-        for layer in range(len(networkLayerSizes)):
+        for layer in range(len(networkLayerSizes) - 1):
             self.layers.append(Layer(self.totalNetwork[layer], self.totalNetwork[layer + 1]))
 
         self.lossLog = []
@@ -357,8 +357,6 @@ class Network:
         self.canvas.pack()
         self.granularity = granularity
         self.block_size = (self.geo / self.granularity)
-
-
 
 
     def graph(self, granularity = None, sclices = [], sclice_positions = []):
