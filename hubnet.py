@@ -1,4 +1,5 @@
 
+from cProfile import label
 import math
 import random
 import matplotlib.pyplot as plt
@@ -218,6 +219,7 @@ class Network:
             self.layers.append(Layer(self.totalNetwork[layer], self.totalNetwork[layer + 1]))
 
         self.lossLog = []
+        self.totalGraphedPoints = []
 
         if(type(parameters) == list):
             self.setParameters(parameters)
@@ -332,129 +334,78 @@ class Network:
 
         plt.show()
 
-            
-    def graph(self, granularity=15, grab = 2):
 
-        kint = Tk()
-        kint.title('Network Graph')
-        kint.resizable(False, False)
+    def drawPoint(self, x, y, r, color):
+        self.canvas.create_rectangle(
+            (x * self.block_size) + (r / 2), 
+            (y * self.block_size) + (r / 2),
+            ((x + 1) * self.block_size) - (r / 2), 
+            ((y + 1) * self.block_size) - (r / 2), 
+            fill=color, 
+            outline=color,
+            tags='%d, %d' % (x, y)
+        )
+    
 
-        geo = 1000
-
-        kint.geometry('%dx%d' % (geo, geo))
-
-        canvas = Canvas(kint, width=geo, height=geo)
-        canvas.pack()
-
-        block_size = (geo / granularity)
-        print('Block Size: %d' % block_size)
-
-        def drawPoint(x, y, r, color):
-            # print(x, y, r, color)
-            
-            canvas.create_rectangle(
-                (x * block_size) + (r / 2), 
-                (y * block_size) + (r / 2),
-                ((x + 1) * block_size) - (r / 2), 
-                ((y + 1) * block_size) - (r / 2), 
-                fill=color, 
-                outline=color
-            )
-
-            # print('\n')
-            # print((x * block_size) + (r / 2))
-            # print((y * block_size) + (r / 2))
-            # print(((x + 1) * block_size) - (r / 2))
-            # print(((y + 1) * block_size) - (r / 2))
+    def initCanvas(self, granularity=15):
+        self.kint = Tk()
+        self.kint.title('Network Graph')
+        self.kint.resizable(False, False)
+        self.geo = 1000
+        self.kint.geometry('%dx%d' % (self.geo, self.geo))
+        self.canvas = Canvas(self.kint, width=self.geo, height=self.geo)
+        self.canvas.pack()
+        self.granularity = granularity
+        self.block_size = (self.geo / self.granularity)
 
 
-        print("Generating graph... Block Size: %d" % block_size)
-
-        
 
 
-        
-        def generatePoints(cur = [], n = 0):
+    def graph(self, granularity = None, sclices = [], sclice_positions = []):
 
-            if(n == 0):
-                return cur
-
-            points = []
-
-            for i in range(granularity):
-                g = generatePoints(cur + [i], n - 1)
-                points.extend(g)
-
-            return points
-
-        
-        poi = generatePoints([], grab)
-
-        print("Generated Points")
+        if(granularity == None):
+            granularity = self.granularity
 
         points = []
-        points2 = []
 
-        for p in range(0, len(poi), grab):
-            
-            l = []
-            l2 = []
-            for i in range(grab):
-                l.append(map(poi[p + i], 0, granularity, -1, 1))
-                l2.append(poi[p + i])
+        for x in range(granularity):
+            for y in range(granularity):
 
-            points.append(l)
-            points2.append(l2)
-            
-        
-        length = len(points)
-        counter = 0
+                l = []
+                
+                x_ = round(map(x, 0, granularity, -1, 1), 2)
+                y_ = round(map(y, 0, granularity, -1, 1), 2)
 
-        for p, og_p in zip(points, points2):
+                sclices_ = []
+                for s in sclices:
+                    sclices_.append(round(map(s, 0, granularity, -1, 1), 2))
+                
+                c = 0
+                if(sclice_positions != []):
+                    l = [0] * len(sclice_positions)
 
-            if(counter % 100 == 0):
-                print('%d %%' % (counter / length * 100))
-            counter += 1
+                    for i, s in enumerate(sclice_positions):
+                        if(s == 'x'):
+                            l[i] = x_
+                        elif(s == 'y'):
+                            l[i] = y_
+                        else:
+                            l[i] = sclices_[c]
+                            c += 1
+    
+                else:
+                    l = [x_, y_]
+                    l.extend(sclices_) 
+                
+                forward = self(l)
 
-            p_extend = [0] * (self.totalNetwork[0] - len(p))
-            p.extend(p_extend)
-            
-            color = self(p)
-
-            x = 0
-            y = 0
-            r = 0
-
-            if(grab == 2):
-                x = og_p[0]
-                y = og_p[1]
-
-            elif(grab >= 3):
-                x = og_p[0]
-                y = og_p[1]
-                r = block_size - (map(p[2], -1, 1, 0, block_size))
-                print("Radius: %d" % r)
-
-            if(type(color) == list):
-
-                maxIndex = color.index(max(color))
+                maxIndex = forward.index(max(forward))
                 color = colors[maxIndex]
-                drawPoint(x, y, r, color)
+                points.append((x, y, 0, color))
+                
+        self.totalGraphedPoints = points
 
-            else:
+        for p in self.totalGraphedPoints:
+            self.drawPoint(p[0], p[1], p[2], p[3])
 
-                color = color.value  
-
-                def RGBtoHEX(r, g, b):
-                    r = int(map(r, 0, 1, 0, 255))
-                    g = int(map(g, 0, 1, 0, 255))
-                    b = int(map(b, 0, 1, 0, 255))
-                    return '#%02x%02x%02x' % (r, g, b)
-
-                b = map(b, -1, 1, 0, 1)
-                color = RGBtoHEX(0, b, b)
-                drawPoint(x, y, r, color)
-                    
-
-
-        kint.mainloop()
+        self.kint.mainloop()
