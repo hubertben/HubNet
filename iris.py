@@ -9,9 +9,9 @@ n = Network([4, 5, 5, 3], params)
 
 # n.train(d.X, d.Y, stopLoss=10, _print = False)
 
-n.initCanvas(granularity=50)
-n.graph(
-    granularity = 50, 
-    sclices = [35, 25],
-    sclice_positions=[0, 'x', 0, 'y']
+n.graphMulti(
+    graphNum = 50,
+    granularity = 100, 
+    sclices = [17],
+    sclice_positions=['x', 'm', 'y', 'm']
 )

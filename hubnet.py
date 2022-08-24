@@ -1,8 +1,8 @@
 
-from cProfile import label
 import math
 import random
 import matplotlib.pyplot as plt
+import os
 
 from tkinter import *
 
@@ -335,8 +335,8 @@ class Network:
         plt.show()
 
 
-    def drawPoint(self, x, y, r, color):
-        self.canvas.create_rectangle(
+    def drawPoint(self, canvas, x, y, r, color):
+        canvas.create_rectangle(
             (x * self.block_size) + (r / 2), 
             (y * self.block_size) + (r / 2),
             ((x + 1) * self.block_size) - (r / 2), 
@@ -345,9 +345,90 @@ class Network:
             outline=color,
             tags='%d, %d' % (x, y)
         )
-    
 
-    def initCanvas(self, granularity=15):
+
+
+    def graphMulti(self, graphNum, granularity, sclices = [], sclice_positions = []):
+        
+        self.graphNum = graphNum
+
+        self.kint = Tk()
+        self.kint.title('Network Graph')
+        self.kint.resizable(False, False)
+        self.geo = 1000
+        self.kint.geometry('%dx%d' % (self.geo, self.geo))
+        
+        self.canvas_s = []
+
+        s = math.sqrt(self.graphNum)
+
+        for i in range(self.graphNum):
+            canvas = Canvas(self.kint, width=int(self.geo // s), height=int(self.geo // s))
+            canvas.grid(row=int(i // s), column=int(i % s))
+            self.canvas_s.append(canvas)
+        
+        self.granularity = granularity
+        self.block_size = (self.geo / self.granularity) // 10
+
+
+        for graph in range(self.graphNum):
+
+            print("Generating Graph %d" % graph)
+
+            graph = map(graph, 0, self.graphNum, 0, self.granularity)
+    
+            points = []
+
+            for x in range(granularity):
+                for y in range(granularity):
+
+                    l = []
+                    
+                    x_ = round(map(x, 0, granularity, -1, 1), 2)
+                    y_ = round(map(y, 0, granularity, -1, 1), 2)
+
+                    sclices_ = []
+                    for s in sclices:
+                        sclices_.append(round(map(s, 0, granularity, -1, 1), 2))
+                    
+                    c = 0
+                    if(sclice_positions != []):
+                        l = [0] * len(sclice_positions)
+
+                        for i, s in enumerate(sclice_positions):
+                            if(s == 'x'):
+                                l[i] = x_
+                            elif(s == 'y'):
+                                l[i] = y_
+                            elif(s == 'm'):
+                                l[i] = map(graph, 0, self.graphNum, -1, 1)
+                            else:
+                                l[i] = sclices_[c]
+                                c += 1
+        
+                    else:
+                        l = [x_, y_]
+                        l.extend(sclices_) 
+                    
+                    forward = self(l)
+
+                    maxIndex = forward.index(max(forward))
+                    color = colors[maxIndex]
+                    points.append((x, y, 0, color))
+                    
+            self.totalGraphedPoints.append(points)
+
+
+        for i in range(len(self.canvas_s)):
+            print("Rendering Graph %d" % i)
+            for p in self.totalGraphedPoints[i]:
+                self.drawPoint(self.canvas_s[i], p[0], p[1], p[2], p[3])
+
+        self.kint.mainloop()
+
+
+    def graph(self, granularity, sclices = [], colorMode = "flat", threshold = 255):
+
         self.kint = Tk()
         self.kint.title('Network Graph')
         self.kint.resizable(False, False)
@@ -355,16 +436,31 @@ class Network:
         self.kint.geometry('%dx%d' % (self.geo, self.geo))
         self.canvas = Canvas(self.kint, width=self.geo, height=self.geo)
         self.canvas.pack()
+
+        def getter(event):   
+            dir_name = "graphs/"
+            term = os.listdir(dir_name)
+
+            for item in term:
+                if item.endswith(".ps"):
+                    os.remove(os.path.join(dir_name, item))
+
+            path = "graphs/" + str(sclices) + "_mode_" + colorMode + "_thr_" + str(threshold) + "_gran_" + str(granularity)
+            from PIL import Image
+            self.canvas.postscript(file=path + ".ps", colormode='color')
+            img = Image.open(path + ".ps") 
+
+            img.save(path + ".png", "png")
+
+        self.canvas.bind("<Button-1>", getter)
+        self.canvas.pack()
+
         self.granularity = granularity
         self.block_size = (self.geo / self.granularity)
 
-
-    def graph(self, granularity = None, sclices = [], sclice_positions = []):
-
-        if(granularity == None):
-            granularity = self.granularity
-
         points = []
+
+        print("Generating Points")
 
         for x in range(granularity):
             for y in range(granularity):
@@ -373,37 +469,75 @@ class Network:
                 
                 x_ = round(map(x, 0, granularity, -1, 1), 2)
                 y_ = round(map(y, 0, granularity, -1, 1), 2)
-
-                sclices_ = []
-                for s in sclices:
-                    sclices_.append(round(map(s, 0, granularity, -1, 1), 2))
                 
-                c = 0
-                if(sclice_positions != []):
-                    l = [0] * len(sclice_positions)
+                l = [0] * len(sclices)
 
-                    for i, s in enumerate(sclice_positions):
-                        if(s == 'x'):
-                            l[i] = x_
-                        elif(s == 'y'):
-                            l[i] = y_
-                        else:
-                            l[i] = sclices_[c]
-                            c += 1
-    
-                else:
-                    l = [x_, y_]
-                    l.extend(sclices_) 
-                
+                for i, s in enumerate(sclices):
+                    if(s == 'x'):
+                        l[i] = x_
+                    elif(s == 'y'):
+                        l[i] = y_
+                    else:
+                        l[i] = round(map(sclices[i], 0, granularity, -1, 1), 3)
+                        
                 forward = self(l)
 
-                maxIndex = forward.index(max(forward))
-                color = colors[maxIndex]
+                color = None
+
+                if(colorMode == "flat"):
+                    
+                    maxIndex = forward.index(max(forward))
+                    color = colors[maxIndex]
+
+                elif(colorMode == "blend"):
+                    
+                    def RGBtoHEX(r, g, b):
+                        return '#%02x%02x%02x' % (r, g, b)
+
+                    r = map((forward[0].value), -1, 1, 0, 255)
+                    g = map((forward[1].value), -1, 1, 0, 255)
+                    b = map((forward[2].value), -1, 1, 0, 255)
+
+                    if(threshold != 255):
+                        if(r > threshold and g > threshold and b > threshold):
+                            r = 255
+                            g = 255
+                            b = 255
+                        elif(r > threshold and g > threshold):
+                            r = 255
+                            g = 255
+                            b = 0
+                        elif(r > threshold and b > threshold):
+                            r = 255
+                            g = 0
+                            b = 255
+                        elif(g > threshold and b > threshold):
+                            r = 0
+                            g = 255
+                            b = 255
+                        elif(r > threshold):
+                            r = 255
+                            g = 0
+                            b = 0
+                        elif(g > threshold):
+                            r = 0
+                            g = 255
+                            b = 0
+                        elif(b > threshold):
+                            r = 0
+                            g = 0
+                            b = 255
+
+                    color = RGBtoHEX(int(r), int(g), int(b))
+
                 points.append((x, y, 0, color))
                 
         self.totalGraphedPoints = points
 
+        print("Rendering Points")
+
         for p in self.totalGraphedPoints:
-            self.drawPoint(p[0], p[1], p[2], p[3])
+            self.drawPoint(self.canvas, p[0], p[1], p[2], p[3])
 
         self.kint.mainloop()
+        
