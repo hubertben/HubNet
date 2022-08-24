@@ -1,5 +1,6 @@
 # HubNet
-A Simple Neural Network Architecture based on Andrej Karpathy's MicroGrad.
+A Simple Neural Network Architecture based on Andrej Karpathy's MicroGrad. HubNet implements a similar structure to many high level machine learning libraries such as PyTourch or TensorFlow. Below are some examples of HubNet's ability to render higher dimentional cross sections.
+
 
 ### Iris Dataset | Network Blending Mode
 
